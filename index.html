@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Celestial Engine - Master Bio Engine</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- 256x144 Downscaled Hardware Engine Canvas -->
+    <canvas id="skyCanvas" title="Click anywhere to hide/show bio card"></canvas>
+
+    <!-- Interactive Glassmorphic Bio Card Overlay -->
+    <div class="viewport-overlay" id="overlay">
+        <div class="profile-card">
+
+            <!-- CARD HEADER -->
+            <div class="card-header">
+                <div class="avatar-frame">
+                    <img src="https://cdn.discordapp.com/attachments/1528918887662620787/1563459621870374933/d8bbb25f405e90188c1c570ba4a5723d_1.jpg?ex=6addb4bd&is=6adc633d&hm=719bd365e14db9602a1e86450daf2d7b38846fb67e25adb7e77bbe9ad76c1fc2&" alt="Avatar">
+                    <div class="online-status"></div>
+                </div>
+                <div class="username">saiv3n</div>
+                <div class="tagline">tf u looking at bih...</div>
+            </div>
+
+            <div class="card-scroll-body">
+
+                <!-- ABOUT SECTION -->
+                <div>
+                    <div class="section-title">About Me</div>
+                    <div class="bio-text">
+                        I love playing flee the facility on roblox!! if you camp me I will shoot you.
+                    </div>
+                </div>
+
+                <!-- LINKS & SOCIALS -->
+                <div>
+                    <div class="section-title">Links & Socials</div>
+                    <div class="links-container">
+                        <a href="https://www.instagram.com/six_saiv3n?cplk=bWVhanNqM3JwbWVu" class="bio-link" target="_blank">
+                            <span>📷 Instagram</span>
+                            <span>→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ADDITIONAL INFO -->
+                <div>
+                    <div class="section-title">Additional Info</div>
+                    <div class="bio-text" style="font-family: monospace; font-size: 0.8rem; color: #ffffff;">
+                        Business Major.
+                    </div>
+
+                    <!-- COPYRIGHT FOOTER -->
+                    <div class="card-footer">
+                        © <span id="current-year"></span> SolarSailsSites. All Rights Reserved.
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Toggle Hint -->
+    <div class="toggle-hint" id="hint">Click background to toggle view focus</div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
