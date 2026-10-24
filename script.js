@@ -44,7 +44,6 @@ function drawPlusStar(ctx, x, y, alpha) {
     ctx.shadowBlur = 4;
     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
 
-    // Draw exact 5-pixel '+' layout (center + top + bottom + left + right)
     ctx.fillRect(x, y, 1, 1); // Center
     ctx.fillRect(x, y - 1, 1, 1); // Top
     ctx.fillRect(x, y + 1, 1, 1); // Bottom
@@ -64,13 +63,12 @@ class ConstellationObject {
             x: originX + node.x,
             y: originY + node.y,
             phase: Math.random() * Math.PI * 2,
-            speed: 0.0008 + Math.random() * 0.0012, // Slow peaceful twinkle
+            speed: 0.0008 + Math.random() * 0.0012,
             baseAlpha: 0.8 + Math.random() * 0.2
         }));
     }
 
     draw(ctx, time) {
-        // Slow flashing connection lines
         let linePulse = 0.22 + Math.sin(time * 0.0006 + this.phaseOffset) * 0.15;
         ctx.shadowBlur = 0;
         ctx.strokeStyle = `rgba(199, 146, 234, ${linePulse})`;
@@ -85,7 +83,6 @@ class ConstellationObject {
             ctx.stroke();
         }
 
-        // Draw 5-pixel '+' stars for each node
         for (let s = 0; s < this.stars.length; s++) {
             let star = this.stars[s];
             let twinkle = Math.sin(time * star.speed + star.phase);
@@ -101,14 +98,9 @@ class ConstellationObject {
 const CARD_BOUNDS = { minX: 68, maxX: 188, minY: 8, maxY: 122 };
 
 const constellations = [
-    // ♪ Single Eighth Note (Left sky flank)
     new ConstellationObject('♪', 16, 16, [
-        { x: 0, y: 16 }, // 0: Diamond left
-        { x: 6, y: 12 }, // 1: Diamond bottom
-        { x: 12, y: 16 }, // 2: Diamond right
-        { x: 6, y: 20 }, // 3: Diamond top
-        { x: 12, y: 2 }, // 4: Stem top
-        { x: 22, y: 6 } // 5: Flag tip
+        { x: 0, y: 16 }, { x: 6, y: 12 }, { x: 12, y: 16 },
+        { x: 6, y: 20 }, { x: 12, y: 2 }, { x: 22, y: 6 }
     ], [
         [0, 1],
         [1, 2],
@@ -118,14 +110,9 @@ const constellations = [
         [4, 5]
     ], 0.0),
 
-    // ♫ Beamed Eighth Notes (Right sky flank)
     new ConstellationObject('♫', 204, 12, [
-        { x: 0, y: 6 }, // 0: Top-left beam star
-        { x: 18, y: 2 }, // 1: Top-right beam star
-        { x: 0, y: 20 }, // 2: Bottom-left note head
-        { x: 18, y: 18 }, // 3: Bottom-right note head
-        { x: -4, y: 22 }, // 4: Left note tail extension
-        { x: 16, y: 21 } // 5: Right note tail extension
+        { x: 0, y: 6 }, { x: 18, y: 2 }, { x: 0, y: 20 },
+        { x: 18, y: 18 }, { x: -4, y: 22 }, { x: 16, y: 21 }
     ], [
         [0, 1],
         [0, 2],
@@ -134,29 +121,21 @@ const constellations = [
         [3, 5]
     ], 1.5),
 
-    // 𝄞 Treble Clef (Enlarged and placed down in the lower right sky)
     new ConstellationObject('𝄞', 152, 68, [
-        { x: 12, y: 0 }, // 0: Top peak node
-        { x: 24, y: 14 }, // 1: Upper-right triangle node
-        { x: 12, y: 22 }, // 2: Upper-middle spine intersection
-        { x: 0, y: 31 }, // 3: Far-left wing node
-        { x: 12, y: 40 }, // 4: Lower-middle spine intersection
-        { x: 24, y: 31 }, // 5: Far-right belly node
-        { x: 8, y: 31 }, // 6: Inner curl hook node
-        { x: 10, y: 35 }, // 7: Inner curl lower drop tip
-        { x: 12, y: 50 }, // 8: Bottom spine node
-        { x: 6, y: 47 } // 9: Bottom-left tail node
+        { x: 12, y: 0 }, { x: 24, y: 14 }, { x: 12, y: 22 },
+        { x: 0, y: 31 }, { x: 12, y: 40 }, { x: 24, y: 31 },
+        { x: 8, y: 31 }, { x: 10, y: 35 }, { x: 12, y: 50 }, { x: 6, y: 47 }
     ], [
-        [0, 8], // 1. Straight vertical spine main shaft
+        [0, 8],
         [0, 1],
-        [1, 2], // 2. Top loop triangle
+        [1, 2],
         [2, 3],
-        [3, 4], // 3. Left wing sweep
-        [3, 5], // 4. Horizontal cross bar
+        [3, 4],
+        [3, 5],
         [5, 6],
-        [6, 7], // 5. Inner curl hook
-        [4, 5], // 6. Lower right loop connection
-        [8, 9] // 7. Bottom-left tail hook
+        [6, 7],
+        [4, 5],
+        [8, 9]
     ], 3.0)
 ];
 
@@ -273,10 +252,10 @@ function triggerLaunchBurst(x, y, colorSet) {
     }
 }
 
-// --- 8. CRYSTALLINE GEMSTONE LOW-POLY SPHERE MESH GENERATOR ---
+// --- 8. OPTIMIZED LOW-POLY SPHERE MESH (96 Triangles instead of 192) ---
 const rawPlanetFaces = [];
-const latSteps = 12;
-const lonSteps = 16;
+const latSteps = 8;
+const lonSteps = 12;
 const sphereRadius = 24;
 
 for (let i = 0; i < latSteps; i++) {
@@ -309,8 +288,17 @@ for (let i = 0; i < latSteps; i++) {
     }
 }
 
-// --- 9. ANIMATED RENDER LOOP PASS ---
+// --- 9. STABLE DELTA-TIME ANIMATED RENDER LOOP ---
+let lastTime = 0;
+
 function renderScene(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    let deltaTime = timestamp - lastTime;
+
+    // Cap max delta time to prevent spiraling or large jumps when tabbed out
+    if (deltaTime > 100) deltaTime = 100;
+    lastTime = timestamp;
+
     const time = timestamp || 0;
 
     // A. Base Sky Render Loop (Gradient + Dithering)
@@ -353,7 +341,6 @@ function renderScene(timestamp) {
     // B. RENDER BACKGROUND LAYER (BEHIND PLANET)
     ctx.putImageData(imgData, 0, 0);
 
-    // 1. Render Standalone Background Stars
     for (let i = 0; i < standaloneStars.length; i++) {
         let star = standaloneStars[i];
         let twinkle = Math.sin(time * star.speed + star.phase);
@@ -366,12 +353,10 @@ function renderScene(timestamp) {
         ctx.fillRect(star.x, star.y, 1, 1);
     }
 
-    // 2. Render Distinct Constellation Objects (with 5-pixel '+' stars)
     for (let c = 0; c < constellations.length; c++) {
         constellations[c].draw(ctx, time);
     }
 
-    // 3. Meteors & Burst Particles
     if (time - lastMeteorTime > nextMeteorDelay) {
         spawnMeteor();
         lastMeteorTime = time;
