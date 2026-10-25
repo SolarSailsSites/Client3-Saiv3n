@@ -21,7 +21,6 @@ const mountainHeights = new Int32Array(V_WIDTH);
 
 for (let x = 0; x < V_WIDTH; x++) {
     let u = x / V_WIDTH;
-
     let noise1 = Math.sin(x * 0.027 + 0.8) * 8.0;
     let noise2 = Math.cos(x * 0.061 - 1.2) * 4.5;
     let noise3 = Math.sin(x * 0.133 + 2.1) * 2.2;
@@ -30,7 +29,6 @@ for (let x = 0; x < V_WIDTH; x++) {
     let leftCluster = Math.exp(-Math.pow((u - 0.22) / 0.18, 2)) * 18.0;
     let midClearing = Math.exp(-Math.pow((u - 0.52) / 0.12, 2)) * 5.0;
     let rightMajesty = Math.exp(-Math.pow((u - 0.84) / 0.19, 2)) * 32.0;
-
     let baselineCurve = Math.sin(u * Math.PI) * 2.5;
 
     let organicHeight = leftCluster + midClearing + rightMajesty + (noise1 + noise2 + noise3 + noise4) + baselineCurve;
@@ -43,13 +41,11 @@ function drawPlusStar(ctx, x, y, alpha) {
     ctx.shadowColor = 'rgba(230, 200, 255, 0.8)';
     ctx.shadowBlur = 4;
     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-
-    ctx.fillRect(x, y, 1, 1); // Center
-    ctx.fillRect(x, y - 1, 1, 1); // Top
-    ctx.fillRect(x, y + 1, 1, 1); // Bottom
-    ctx.fillRect(x - 1, y, 1, 1); // Left
-    ctx.fillRect(x + 1, y, 1, 1); // Right
-
+    ctx.fillRect(x, y, 1, 1);
+    ctx.fillRect(x, y - 1, 1, 1);
+    ctx.fillRect(x, y + 1, 1, 1);
+    ctx.fillRect(x - 1, y, 1, 1);
+    ctx.fillRect(x + 1, y, 1, 1);
     ctx.restore();
 }
 
@@ -86,9 +82,7 @@ class ConstellationObject {
         for (let s = 0; s < this.stars.length; s++) {
             let star = this.stars[s];
             let twinkle = Math.sin(time * star.speed + star.phase);
-            let alpha = star.baseAlpha + twinkle * 0.3;
-            alpha = Math.min(1.0, Math.max(0.35, alpha));
-
+            let alpha = Math.min(1.0, Math.max(0.35, star.baseAlpha + twinkle * 0.3));
             drawPlusStar(ctx, star.x, star.y, alpha);
         }
     }
@@ -96,7 +90,6 @@ class ConstellationObject {
 
 // --- 6. EXACT REFERENCE-MATCHED CONSTELLATIONS ---
 const CARD_BOUNDS = { minX: 68, maxX: 188, minY: 8, maxY: 122 };
-
 const constellations = [
     new ConstellationObject('♪', 16, 16, [
         { x: 0, y: 16 }, { x: 6, y: 12 }, { x: 12, y: 16 },
@@ -139,60 +132,27 @@ const constellations = [
     ], 3.0)
 ];
 
-function isInsideCard(x, y) {
-    return x >= CARD_BOUNDS.minX && x <= CARD_BOUNDS.maxX && y >= CARD_BOUNDS.minY && y <= CARD_BOUNDS.maxY;
-}
-
 const standaloneStars = [];
 
 function initStandaloneStars() {
     let attempts = 0;
-    const TARGET_STAR_COUNT = 14;
-    const MIN_DIST_STARS = 24;
-    const MIN_DIST_CONSTELLATIONS = 20;
-
-    while (standaloneStars.length < TARGET_STAR_COUNT && attempts < 3000) {
+    while (standaloneStars.length < 14 && attempts < 3000) {
         attempts++;
         let sx = Math.floor(Math.random() * (V_WIDTH - 16)) + 8;
         let sy = Math.floor(Math.random() * (V_HEIGHT * 0.68)) + 8;
-
         if (sy >= mountainHeights[sx] - 2) continue;
-        if (isInsideCard(sx, sy)) continue;
+        if (sx >= CARD_BOUNDS.minX && sx <= CARD_BOUNDS.maxX && sy >= CARD_BOUNDS.minY && sy <= CARD_BOUNDS.maxY) continue;
 
-        let tooClose = false;
-        for (let i = 0; i < standaloneStars.length; i++) {
-            let dx = standaloneStars[i].x - sx;
-            let dy = standaloneStars[i].y - sy;
-            if (Math.sqrt(dx * dx + dy * dy) < MIN_DIST_STARS) {
-                tooClose = true;
-                break;
-            }
-        }
+        let tooClose = standaloneStars.some(s => Math.hypot(s.x - sx, s.y - sy) < 24);
         if (tooClose) continue;
 
-        for (let c = 0; c < constellations.length; c++) {
-            let con = constellations[c];
-            for (let s = 0; s < con.stars.length; s++) {
-                let cs = con.stars[s];
-                let dx = cs.x - sx;
-                let dy = cs.y - sy;
-                if (Math.sqrt(dx * dx + dy * dy) < MIN_DIST_CONSTELLATIONS) {
-                    tooClose = true;
-                    break;
-                }
-            }
-            if (tooClose) break;
-        }
-
-        if (!tooClose) {
-            standaloneStars.push({
-                x: sx,
-                y: sy,
-                speed: 0.0015 + Math.random() * 0.003,
-                phase: Math.random() * Math.PI * 2,
-                baseAlpha: 0.5 + Math.random() * 0.4
-            });
-        }
+        standaloneStars.push({
+            x: sx,
+            y: sy,
+            speed: 0.0015 + Math.random() * 0.003,
+            phase: Math.random() * Math.PI * 2,
+            baseAlpha: 0.5 + Math.random() * 0.4
+        });
     }
 }
 initStandaloneStars();
@@ -201,9 +161,9 @@ initStandaloneStars();
 const meteors = [];
 const particles = [];
 const METEOR_PALETTE = [
-    { head: '#e0f4ff', core: 'rgba(120, 210, 255, 1.0)', trail: [130, 205, 255], glow: 'rgba(80, 190, 255, 1.0)', harshGlow: 'rgba(100, 220, 255, 0.95)' },
-    { head: '#f5e8ff', core: 'rgba(210, 140, 255, 1.0)', trail: [210, 140, 255], glow: 'rgba(190, 110, 255, 1.0)', harshGlow: 'rgba(220, 130, 255, 0.95)' },
-    { head: '#ffe8f5', core: 'rgba(255, 130, 200, 1.0)', trail: [255, 130, 200], glow: 'rgba(255, 90, 180, 1.0)', harshGlow: 'rgba(255, 120, 210, 0.95)' }
+    { head: '#e0f4ff', core: 'rgba(120, 210, 255, 1.0)', trail: '130, 205, 255', glow: 'rgba(80, 190, 255, 1.0)', harshGlow: 'rgba(100, 220, 255, 0.95)' },
+    { head: '#f5e8ff', core: 'rgba(210, 140, 255, 1.0)', trail: '210, 140, 255', glow: 'rgba(190, 110, 255, 1.0)', harshGlow: 'rgba(220, 130, 255, 0.95)' },
+    { head: '#ffe8f5', core: 'rgba(255, 130, 200, 1.0)', trail: '255, 130, 200', glow: 'rgba(255, 90, 180, 1.0)', harshGlow: 'rgba(255, 120, 210, 0.95)' }
 ];
 
 let lastMeteorTime = 0;
@@ -212,18 +172,12 @@ let nextMeteorDelay = 250 + Math.random() * 350;
 function spawnMeteor() {
     const colorSet = METEOR_PALETTE[Math.floor(Math.random() * METEOR_PALETTE.length)];
     const thicknessTier = Math.random() > 0.85 ? 3 : (Math.random() > 0.5 ? 2 : 1);
-    const length = 14 + thicknessTier * 6 + Math.floor(Math.random() * 8);
-    const speed = 3.0 + Math.random() * 2.0;
-
-    const startX = Math.floor(Math.random() * (V_WIDTH + 40)) - 10;
-    const startY = Math.floor(Math.random() * (V_HEIGHT * 0.4)) - 10;
-
     meteors.push({
-        x: startX,
-        y: startY,
-        dx: -speed * 1.25,
-        dy: speed * 0.75,
-        length: length,
+        x: Math.floor(Math.random() * (V_WIDTH + 40)) - 10,
+        y: Math.floor(Math.random() * (V_HEIGHT * 0.4)) - 10,
+        dx: -(3.0 + Math.random() * 2.0) * 1.25,
+        dy: (3.0 + Math.random() * 2.0) * 0.75,
+        length: 14 + thicknessTier * 6 + Math.floor(Math.random() * 8),
         thickness: thicknessTier,
         colorSet: colorSet,
         state: 'igniting',
@@ -235,8 +189,8 @@ function spawnMeteor() {
 }
 
 function triggerLaunchBurst(x, y, colorSet) {
-    const particleCount = 6 + Math.floor(Math.random() * 5);
-    for (let p = 0; p < particleCount; p++) {
+    const count = 6 + Math.floor(Math.random() * 5);
+    for (let p = 0; p < count; p++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 0.5 + Math.random() * 1.2;
         particles.push({
@@ -252,11 +206,19 @@ function triggerLaunchBurst(x, y, colorSet) {
     }
 }
 
-// --- 8. OPTIMIZED LOW-POLY SPHERE MESH (96 Triangles instead of 192) ---
+// --- 8. OPTIMIZED LOW-POLY SPHERE MESH DATA & COLOR MAPS ---
 const rawPlanetFaces = [];
 const latSteps = 8;
 const lonSteps = 12;
 const sphereRadius = 24;
+
+const LAT_COLOR_MAP = [
+    { limit: -0.60, r: 255, g: 215, b: 255 },
+    { limit: -0.25, r: 220, g: 130, b: 240 },
+    { limit: 0.15, r: 165, g: 65, b: 195 },
+    { limit: 0.55, r: 110, g: 30, b: 145 },
+    { limit: Infinity, r: 55, g: 10, b: 80 }
+];
 
 for (let i = 0; i < latSteps; i++) {
     let theta1 = (i / latSteps) * Math.PI;
@@ -276,17 +238,28 @@ for (let i = 0; i < latSteps; i++) {
             let ny = (pA.y + pB.y + pC.y) / 3;
             let nz = (pA.z + pB.z + pC.z) / 3;
             let len = Math.hypot(nx, ny, nz);
-            nx /= len;
-            ny /= len;
-            nz /= len;
             let avgY = (pA.y + pB.y + pC.y) / 3;
-            return { verts: [pA, pB, pC], normal: { x: nx, y: ny, z: nz }, lat: avgY };
-        }
 
+            let colorMatch = LAT_COLOR_MAP.find(zone => avgY < zone.limit);
+
+            return {
+                verts: [pA, pB, pC],
+                normal: { x: nx / len, y: ny / len, z: nz / len },
+                baseR: colorMatch.r,
+                baseG: colorMatch.g,
+                baseB: colorMatch.b
+            };
+        }
         rawPlanetFaces.push(createTriangle(v1, v2, v3));
         rawPlanetFaces.push(createTriangle(v1, v3, v4));
     }
 }
+
+const renderedFaces = Array.from({ length: rawPlanetFaces.length }, () => ({
+    pts: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }],
+    z: 0,
+    color: ""
+}));
 
 // --- 9. STABLE DELTA-TIME ANIMATED RENDER LOOP ---
 let lastTime = 0;
@@ -294,268 +267,186 @@ let lastTime = 0;
 function renderScene(timestamp) {
     if (!lastTime) lastTime = timestamp;
     let deltaTime = timestamp - lastTime;
-
-    // Cap max delta time to prevent spiraling or large jumps when tabbed out
     if (deltaTime > 100) deltaTime = 100;
     lastTime = timestamp;
-
     const time = timestamp || 0;
 
-    // A. Base Sky Render Loop (Gradient + Dithering)
+    // A. Sky Background Dither Render
     for (let y = 0; y < V_HEIGHT; y++) {
         let pct = y / V_HEIGHT;
+        let r1, g1, b1, r2, g2, b2, t;
+        if (pct < 0.5) {
+            t = pct / 0.5;
+            r1 = C_ZENITH[0];
+            g1 = C_ZENITH[1];
+            b1 = C_ZENITH[2];
+            r2 = C_MID[0];
+            g2 = C_MID[1];
+            b2 = C_MID[2];
+        } else {
+            t = (pct - 0.5) / 0.5;
+            r1 = C_MID[0];
+            g1 = C_MID[1];
+            b1 = C_MID[2];
+            r2 = C_HORIZON[0];
+            g2 = C_HORIZON[1];
+            b2 = C_HORIZON[2];
+        }
+        let rM = r1 * (1 - t) + r2 * t,
+            gM = g1 * (1 - t) + g2 * t,
+            bM = b1 * (1 - t) + b2 * t;
+        let rD1 = Math.min(255, Math.max(0, rM + 4)) >> 4 << 4,
+            gD1 = Math.min(255, Math.max(0, gM + 4)) >> 4 << 4,
+            bD1 = Math.min(255, Math.max(0, bM + 4)) >> 4 << 4;
+        let rD2 = Math.min(255, Math.max(0, rM - 4)) >> 4 << 4,
+            gD2 = Math.min(255, Math.max(0, gM - 4)) >> 4 << 4,
+            bD2 = Math.min(255, Math.max(0, bM - 4)) >> 4 << 4;
 
         for (let x = 0; x < V_WIDTH; x++) {
             const idx = (y * V_WIDTH + x) * 4;
-
-            let r = 0,
-                g = 0,
-                b = 0;
-
-            if (pct < 0.5) {
-                let t = pct / 0.5;
-                r = C_ZENITH[0] * (1 - t) + C_MID[0] * t;
-                g = C_ZENITH[1] * (1 - t) + C_MID[1] * t;
-                b = C_ZENITH[2] * (1 - t) + C_MID[2] * t;
-            } else {
-                let t = (pct - 0.5) / 0.5;
-                r = C_MID[0] * (1 - t) + C_HORIZON[0] * t;
-                g = C_MID[1] * (1 - t) + C_HORIZON[1] * t;
-                b = C_MID[2] * (1 - t) + C_HORIZON[2] * t;
-            }
-
-            const isDitherTile = (x + y) % 2 === 0;
-            const ditherOffset = isDitherTile ? 4 : -4;
-
-            let finalR = Math.min(255, Math.max(0, r + ditherOffset));
-            let finalG = Math.min(255, Math.max(0, g + ditherOffset));
-            let finalB = Math.min(255, Math.max(0, b + ditherOffset));
-
-            data[idx] = Math.round(finalR / 16) * 16;
-            data[idx + 1] = Math.round(finalG / 16) * 16;
-            data[idx + 2] = Math.round(finalB / 16) * 16;
+            const isDither = (x + y) % 2 === 0;
+            data[idx] = isDither ? rD1 : rD2;
+            data[idx + 1] = isDither ? gD1 : gD2;
+            data[idx + 2] = isDither ? bD1 : bD2;
             data[idx + 3] = 255;
         }
     }
-
-    // B. RENDER BACKGROUND LAYER (BEHIND PLANET)
     ctx.putImageData(imgData, 0, 0);
 
-    for (let i = 0; i < standaloneStars.length; i++) {
-        let star = standaloneStars[i];
-        let twinkle = Math.sin(time * star.speed + star.phase);
-        let alpha = star.baseAlpha + twinkle * 0.3;
-        alpha = Math.min(1.0, Math.max(0.2, alpha));
-
+    // Stars & Constellations
+    standaloneStars.forEach(star => {
+        let alpha = Math.min(1.0, Math.max(0.2, star.baseAlpha + Math.sin(time * star.speed + star.phase) * 0.3));
         ctx.shadowColor = 'rgba(180, 150, 255, 0.4)';
         ctx.shadowBlur = 2;
         ctx.fillStyle = `rgba(240, 235, 255, ${alpha})`;
         ctx.fillRect(star.x, star.y, 1, 1);
-    }
+    });
+    constellations.forEach(c => c.draw(ctx, time));
 
-    for (let c = 0; c < constellations.length; c++) {
-        constellations[c].draw(ctx, time);
-    }
-
-    if (time - lastMeteorTime > nextMeteorDelay) {
-        spawnMeteor();
+    // Meteors Core Dynamic Physics Processing
+    if (time - lastMeteorTime > nextMeteorDelay) { spawnMeteor();
         lastMeteorTime = time;
-        nextMeteorDelay = 200 + Math.random() * 400;
-    }
-
+        nextMeteorDelay = 200 + Math.random() * 400; }
     for (let i = meteors.length - 1; i >= 0; i--) {
         let m = meteors[i];
-
         if (m.state === 'igniting') {
             m.igniteProgress += m.igniteSpeed;
-            let twinkleFactor = 0.75 + Math.sin(m.igniteProgress * Math.PI * 12) * 0.25;
-            let intensity = Math.sin(m.igniteProgress * Math.PI) * twinkleFactor;
-
+            let intense = Math.sin(m.igniteProgress * Math.PI) * (0.75 + Math.sin(m.igniteProgress * Math.PI * 12) * 0.25);
             ctx.shadowColor = m.colorSet.harshGlow;
-            ctx.shadowBlur = 10 + intensity * 12;
-
-            let cx = Math.round(m.x);
-            let cy = Math.round(m.y);
-
+            ctx.shadowBlur = 10 + intense * 12;
+            let cx = Math.round(m.x),
+                cy = Math.round(m.y);
             ctx.fillStyle = m.colorSet.core;
             ctx.fillRect(cx - 2, cy, 5, 1);
             ctx.fillRect(cx, cy - 2, 1, 5);
-
-            ctx.fillStyle = m.colorSet.glow;
-            ctx.fillRect(cx - 1, cy - 1, 3, 3);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(cx, cy, 1, 1);
-
-            if (m.igniteProgress >= 1.0) {
-                m.state = 'falling';
-                triggerLaunchBurst(cx, cy, m.colorSet);
-            }
+            if (m.igniteProgress >= 1.0) { m.state = 'falling';
+                triggerLaunchBurst(cx, cy, m.colorSet); }
         } else {
             m.x += m.dx;
             m.y += m.dy;
             m.life -= m.decay;
-
-            if (m.life <= 0 || m.x < -30 || m.y > V_HEIGHT) {
-                meteors.splice(i, 1);
-                continue;
-            }
-
-            const normDx = m.dx / Math.hypot(m.dx, m.dy);
-            const normDy = m.dy / Math.hypot(m.dx, m.dy);
-
+            if (m.life <= 0 || m.x < -30 || m.y > V_HEIGHT) { meteors.splice(i, 1); continue; }
+            let hyp = Math.hypot(m.dx, m.dy),
+                ndx = m.dx / hyp,
+                ndy = m.dy / hyp;
             ctx.shadowColor = m.colorSet.glow;
             ctx.shadowBlur = 4 + m.thickness * 3;
-
             for (let j = 0; j < m.length; j++) {
-                let px = Math.round(m.x - normDx * j);
-                let py = Math.round(m.y - normDy * j);
-
+                let px = Math.round(m.x - ndx * j),
+                    py = Math.round(m.y - ndy * j);
                 if (px < 0 || px >= V_WIDTH || py < 0 || py >= V_HEIGHT) continue;
-
-                let segAlpha = (1 - (j / m.length)) * m.life;
-                if (segAlpha <= 0) continue;
-
-                let sz = m.thickness;
-                if (j > m.length * 0.4) sz = Math.max(1, sz - 1);
-
-                if (j === 0) {
-                    ctx.fillStyle = m.colorSet.head;
-                    ctx.fillRect(px, py, sz, sz);
-                } else {
-                    let rgb = m.colorSet.trail;
-                    ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${segAlpha})`;
-                    ctx.fillRect(px, py, sz, sz);
-                }
+                let alpha = (1 - (j / m.length)) * m.life;
+                if (alpha <= 0) continue;
+                ctx.fillStyle = (j === 0) ? m.colorSet.head : `rgba(${m.colorSet.trail}, ${alpha})`;
+                ctx.fillRect(px, py, m.thickness, m.thickness);
             }
         }
     }
 
+    // Particles Process 
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.dx;
         p.y += p.dy;
         p.life -= p.decay;
-
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-            continue;
-        }
-
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
         ctx.shadowColor = p.glow;
         ctx.shadowBlur = 4 * p.life;
         ctx.fillStyle = p.color;
         ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
     }
-
     ctx.shadowBlur = 0;
 
-    // C. RENDER FOREGROUND PLANET & RINGS
-    const planetX = 128;
-    const planetBaseY = 56;
-    const floatY = Math.sin(time * 0.0012) * 2.5;
-    const currentPlanetY = planetBaseY + floatY;
+    // B. Planet Matrix Calculations
+    const planetX = 128,
+        planetBaseY = 56,
+        currentPlanetY = planetBaseY + Math.sin(time * 0.0012) * 2.5;
+    const ringA = 54,
+        ringB = 14,
+        ringTilt = -0.42,
+        colorSpin = time * 0.002,
+        facetSpin = time * 0.0004;
+    const cosT = Math.cos(ringTilt),
+        sinT = Math.sin(ringTilt),
+        cosS = Math.cos(facetSpin),
+        sinS = Math.sin(facetSpin);
 
-    const ringA = 54;
-    const ringB = 14;
-    const ringTilt = -0.42;
-    const colorSpin = time * 0.002;
-    const facetSpin = time * 0.0004;
-
-    function drawRingSegment(isBack) {
+    function drawRings(isBack) {
         ctx.shadowColor = 'rgba(210, 140, 255, 0.65)';
         ctx.shadowBlur = 5;
-
-        for (let a = 0; a < Math.PI * 2; a += 0.02) {
-            let lx = Math.cos(a) * ringA;
-            let ly = Math.sin(a) * ringB;
-
-            let rx = lx * Math.cos(ringTilt) - ly * Math.sin(ringTilt);
-            let ry = lx * Math.sin(ringTilt) + ly * Math.cos(ringTilt);
-
-            let isPointBack = ry < 0;
-            if (isPointBack !== isBack) continue;
-
-            let colorWave = Math.sin(a * 2 + colorSpin);
-
+        for (let a = 0; a < Math.PI * 2; a += 0.015) {
+            let lx = Math.cos(a) * ringA,
+                ly = Math.sin(a) * ringB;
+            let rx = lx * cosT - ly * sinT,
+                ry = lx * sinT + ly * cosT;
+            if ((ry < 0) !== isBack) continue;
+            let wave = Math.sin(a * 2 + colorSpin);
             for (let w = -2; w <= 2; w++) {
-                let offsetFactor = 1.0 + (w * 0.04);
-                let rX = Math.round(planetX + (lx * offsetFactor) * Math.cos(ringTilt) - (ly * offsetFactor) * Math.sin(ringTilt));
-                let rY = Math.round(currentPlanetY + (lx * offsetFactor) * Math.sin(ringTilt) + (ly * offsetFactor) * Math.cos(ringTilt));
-
-                let coreFactor = 1 - Math.abs(w) * 0.28;
-                let rVal = Math.round((235 + colorWave * 20) * coreFactor);
-                let gVal = Math.round((140 + colorWave * 40) * coreFactor);
-                let bVal = Math.round((255 + colorWave * 0) * coreFactor);
-
-                ctx.fillStyle = `rgb(${rVal}, ${gVal}, ${bVal})`;
+                let f = 1.0 + (w * 0.04);
+                let rX = Math.round(planetX + (lx * f) * cosT - (ly * f) * sinT);
+                let rY = Math.round(currentPlanetY + (lx * f) * sinT + (ly * f) * cosT);
+                let c = 1 - Math.abs(w) * 0.28;
+                ctx.fillStyle = `rgb(${Math.round((235+wave*20)*c)}, ${Math.round((140+wave*40)*c)}, ${Math.round(255*c)})`;
                 ctx.fillRect(rX, rY, 1, 1);
             }
         }
         ctx.shadowBlur = 0;
     }
 
-    drawRingSegment(true);
+    drawRings(true);
 
-    const lightDir = { x: -0.58, y: -0.62, z: 0.52 };
-    const cosSpin = Math.cos(facetSpin);
-    const sinSpin = Math.sin(facetSpin);
+    // C. Facet Transformation Passes
+    const light = { x: -0.58, y: -0.62, z: 0.52 };
+    for (let f = 0; f < rawPlanetFaces.length; f++) {
+        let face = rawPlanetFaces[f];
+        let r1x = face.verts[0].x * cosS - face.verts[0].z * sinS,
+            r1z = face.verts[0].x * sinS + face.verts[0].z * cosS;
+        let r2x = face.verts[1].x * cosS - face.verts[1].z * sinS,
+            r2z = face.verts[1].x * sinS + face.verts[1].z * cosS;
+        let r3x = face.verts[2].x * cosS - face.verts[2].z * sinS,
+            r3z = face.verts[2].x * sinS + face.verts[2].z * cosS;
+        let nX = face.normal.x * cosS - face.normal.z * sinS,
+            nZ = face.normal.x * sinS + face.normal.z * cosS;
 
-    const renderedFaces = rawPlanetFaces.map(face => {
-        function rotateVert(v) {
-            let rx = v.x * cosSpin - v.z * sinSpin;
-            let rz = v.x * sinSpin + v.z * cosSpin;
-            return { x: rx, y: v.y, z: rz };
-        }
+        let NdotL = nX * light.x + face.normal.y * light.y + nZ * light.z;
+        let shade = Math.max(0.18, (NdotL + 1.0) * 0.6666);
+        let glint = (NdotL > 0.72) ? Math.pow((NdotL - 0.72) * 3.5714, 2.0) * 80 : 0;
 
-        let rv1 = rotateVert(face.verts[0]);
-        let rv2 = rotateVert(face.verts[1]);
-        let rv3 = rotateVert(face.verts[2]);
-
-        let normX = face.normal.x * cosSpin - face.normal.z * sinSpin;
-        let normY = face.normal.y;
-        let normZ = face.normal.x * sinSpin + face.normal.z * cosSpin;
-
-        let p1 = { x: planetX + rv1.x * sphereRadius, y: currentPlanetY + rv1.y * sphereRadius, z: rv1.z };
-        let p2 = { x: planetX + rv2.x * sphereRadius, y: currentPlanetY + rv2.y * sphereRadius, z: rv2.z };
-        let p3 = { x: planetX + rv3.x * sphereRadius, y: currentPlanetY + rv3.y * sphereRadius, z: rv3.z };
-
-        let avgZ = (p1.z + p2.z + p3.z) / 3;
-        let NdotL = normX * lightDir.x + normY * lightDir.y + normZ * lightDir.z;
-
-        let baseR = 120,
-            baseG = 40,
-            baseB = 160;
-        let lat = face.lat;
-
-        if (lat < -0.6) { baseR = 255;
-            baseG = 215;
-            baseB = 255; } else if (lat < -0.25) { baseR = 220;
-            baseG = 130;
-            baseB = 240; } else if (lat < 0.15) { baseR = 165;
-            baseG = 65;
-            baseB = 195; } else if (lat < 0.55) { baseR = 110;
-            baseG = 30;
-            baseB = 145; } else { baseR = 55;
-            baseG = 10;
-            baseB = 80; }
-
-        let shade = Math.max(0.18, (NdotL + 1.0) / 1.5);
-        let glint = (NdotL > 0.72) ? Math.pow((NdotL - 0.72) / 0.28, 2.0) * 80 : 0;
-
-        let faceR = Math.min(255, Math.round(baseR * shade + glint));
-        let faceG = Math.min(255, Math.round(baseG * shade + glint));
-        let faceB = Math.min(255, Math.round(baseB * shade + glint));
-
-        return { pts: [p1, p2, p3], z: avgZ, color: `rgb(${faceR}, ${faceG}, ${faceB})` };
-    });
+        let rf = renderedFaces[f];
+        rf.pts[0].x = planetX + r1x * sphereRadius;
+        rf.pts[0].y = currentPlanetY + face.verts[0].y * sphereRadius;
+        rf.pts[1].x = planetX + r2x * sphereRadius;
+        rf.pts[1].y = currentPlanetY + face.verts[1].y * sphereRadius;
+        rf.pts[2].x = planetX + r3x * sphereRadius;
+        rf.pts[2].y = currentPlanetY + face.verts[2].y * sphereRadius;
+        rf.z = (r1z + r2z + r3z) * 0.3333;
+        rf.color = `rgb(${Math.min(255, Math.round(face.baseR * shade + glint))}, ${Math.min(255, Math.round(face.baseG * shade + glint))}, ${Math.min(255, Math.round(face.baseB * shade + glint))})`;
+    }
 
     renderedFaces.sort((a, b) => a.z - b.z);
-
     for (let f = 0; f < renderedFaces.length; f++) {
         let face = renderedFaces[f];
         if (face.z < -0.1) continue;
-
         ctx.fillStyle = face.color;
         ctx.beginPath();
         ctx.moveTo(face.pts[0].x, face.pts[0].y);
@@ -565,41 +456,26 @@ function renderScene(timestamp) {
         ctx.fill();
     }
 
-    drawRingSegment(false);
+    drawRings(false);
 
-    // D. Mountain Silhouette Foreground Layer
+    // D. Foregrounds
     ctx.fillStyle = '#030206';
-    for (let x = 0; x < V_WIDTH; x++) {
-        let mtnY = mountainHeights[x];
-        ctx.fillRect(x, mtnY, 1, V_HEIGHT - mtnY);
-    }
+    for (let x = 0; x < V_WIDTH; x++) { ctx.fillRect(x, mountainHeights[x], 1, V_HEIGHT - mountainHeights[x]); }
 
     requestAnimationFrame(renderScene);
 }
-
 requestAnimationFrame(renderScene);
 
 // --- 10. INTERACTIVE CLICK-TO-HIDE FOCUS CONTROLS ---
 const overlay = document.getElementById('overlay');
 const hint = document.getElementById('hint');
 
-function toggleFocus() {
-    overlay.classList.toggle('hidden');
-    hint.classList.toggle('hidden');
-}
-
+function toggleFocus() { overlay.classList.toggle('hidden');
+    hint.classList.toggle('hidden'); }
 canvas.addEventListener('click', toggleFocus);
-
-overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-        toggleFocus();
-    }
-});
-
-window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'Escape' || e.code === 'KeyH') {
-        toggleFocus();
-    }
-});
-
-document.getElementById('current-year').innerText = new Date().getFullYear();
+if (overlay) {
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) toggleFocus(); });
+}
+window.addEventListener('keydown', (e) => { if (['Space', 'Escape', 'KeyH'].includes(e.code)) toggleFocus(); });
+const yearEl = document.getElementById('current-year');
+if (yearEl) yearEl.innerText = new Date().getFullYear();

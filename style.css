@@ -1,4 +1,5 @@
 /* 1. RESET GLOBAL FRAMEWORK & STRIP UNWANTED MARGINS */
+
 * {
     margin: 0;
     padding: 0;
@@ -16,12 +17,14 @@ html {
     user-select: none;
 }
 
+
 /* 2. AUTOMATED BOX CONSTRAINTS: FIXED CANVAS ENGINE */
+
 canvas {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -30,9 +33,12 @@ canvas {
     image-rendering: crisp-edges;
     z-index: 1;
     cursor: pointer;
+    will-change: transform;
 }
 
+
 /* 3. INTERACTIVE OVERLAY WRAPPER */
+
 .viewport-overlay {
     position: fixed;
     top: 0;
@@ -54,9 +60,11 @@ canvas {
     pointer-events: none !important;
 }
 
-/* 4. DISCORD-STYLE GLASSMORPHIC BIO CARD (MOBILE-OPTIMIZED) */
+
+/* 4. DISCORD-STYLE GLASSMORPHIC BIO CARD */
+
 .profile-card {
-    background: rgba(12, 10, 20, 0.85); /* Solid fallback for mobile GPU safety */
+    background: rgba(12, 10, 20, 0.85);
     width: 100%;
     max-width: 460px;
     height: 82vh;
@@ -71,7 +79,6 @@ canvas {
     position: relative;
 }
 
-/* Enable high-end backdrop blur only on browsers that support it smoothly */
 @supports (backdrop-filter: blur(8px)) {
     .profile-card {
         background: rgba(12, 10, 20, 0.55);
@@ -80,7 +87,9 @@ canvas {
     }
 }
 
+
 /* CARD HEADER */
+
 .card-header {
     padding: 28px 24px 16px 24px;
     text-align: center;
@@ -106,7 +115,9 @@ canvas {
     object-fit: cover;
 }
 
+
 /* GREEN ONLINE STATUS BADGE */
+
 .online-status {
     position: absolute;
     bottom: 4px;
@@ -134,7 +145,9 @@ canvas {
     font-weight: 600;
 }
 
+
 /* INNER SCROLLABLE CONTENT BODY */
+
 .card-scroll-body {
     padding: 20px 24px;
     overflow-y: auto;
@@ -144,7 +157,9 @@ canvas {
     gap: 20px;
 }
 
+
 /* PURPLISH CUSTOM TRANSLUCENT SCROLLBAR */
+
 .card-scroll-body::-webkit-scrollbar {
     width: 6px;
 }
@@ -178,7 +193,9 @@ canvas {
     line-height: 1.5;
 }
 
+
 /* BUTTON LINK STACK */
+
 .links-container {
     display: flex;
     flex-direction: column;
@@ -208,7 +225,9 @@ canvas {
     box-shadow: 0 4px 15px rgba(199, 146, 234, 0.3);
 }
 
+
 /* TOGGLE HINT BADGE */
+
 .toggle-hint {
     position: fixed;
     bottom: 16px;
@@ -231,7 +250,9 @@ canvas {
     opacity: 0;
 }
 
+
 /* CARD FOOTER */
+
 .card-footer {
     padding: 12px 24px 16px 24px;
     text-align: center;
