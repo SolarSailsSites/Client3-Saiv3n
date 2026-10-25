@@ -39,18 +39,12 @@ for (let x = 0; x < V_WIDTH; x++) {
 
 // --- 4. 5-PIXEL '+' CROSS STAR SHAPE ---
 function drawPlusStar(ctx, x, y, alpha) {
-    ctx.save();
-    ctx.shadowColor = 'rgba(230, 200, 255, 0.8)';
-    ctx.shadowBlur = 4;
     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-
     ctx.fillRect(x, y, 1, 1); // Center
     ctx.fillRect(x, y - 1, 1, 1); // Top
     ctx.fillRect(x, y + 1, 1, 1); // Bottom
     ctx.fillRect(x - 1, y, 1, 1); // Left
     ctx.fillRect(x + 1, y, 1, 1); // Right
-
-    ctx.restore();
 }
 
 // --- 5. SEPARATE CONSTELLATION OBJECT CLASS ---
@@ -70,7 +64,6 @@ class ConstellationObject {
 
     draw(ctx, time) {
         let linePulse = 0.22 + Math.sin(time * 0.0006 + this.phaseOffset) * 0.15;
-        ctx.shadowBlur = 0;
         ctx.strokeStyle = `rgba(199, 146, 234, ${linePulse})`;
         ctx.lineWidth = 1;
 
@@ -201,9 +194,9 @@ initStandaloneStars();
 const meteors = [];
 const particles = [];
 const METEOR_PALETTE = [
-    { head: '#e0f4ff', core: 'rgba(120, 210, 255, 1.0)', trail: [130, 205, 255], glow: 'rgba(80, 190, 255, 1.0)', harshGlow: 'rgba(100, 220, 255, 0.95)' },
-    { head: '#f5e8ff', core: 'rgba(210, 140, 255, 1.0)', trail: [210, 140, 255], glow: 'rgba(190, 110, 255, 1.0)', harshGlow: 'rgba(220, 130, 255, 0.95)' },
-    { head: '#ffe8f5', core: 'rgba(255, 130, 200, 1.0)', trail: [255, 130, 200], glow: 'rgba(255, 90, 180, 1.0)', harshGlow: 'rgba(255, 120, 210, 0.95)' }
+    { rgb: '144, 224, 239' }, // Cyan
+    { rgb: '255, 112, 166' }, // Pink
+    { rgb: '255, 198, 255' } // Light Lavender
 ];
 
 let lastMeteorTime = 0;
@@ -211,9 +204,9 @@ let nextMeteorDelay = 250 + Math.random() * 350;
 
 function spawnMeteor() {
     const colorSet = METEOR_PALETTE[Math.floor(Math.random() * METEOR_PALETTE.length)];
-    const thicknessTier = Math.random() > 0.85 ? 3 : (Math.random() > 0.5 ? 2 : 1);
-    const length = 14 + thicknessTier * 6 + Math.floor(Math.random() * 8);
-    const speed = 3.0 + Math.random() * 2.0;
+    const thicknessTier = Math.random() > 0.6 ? 2 : 1;
+    const length = 20 + thicknessTier * 12 + Math.floor(Math.random() * 12);
+    const speed = 2.5 + Math.random() * 2.0;
 
     const startX = Math.floor(Math.random() * (V_WIDTH + 40)) - 10;
     const startY = Math.floor(Math.random() * (V_HEIGHT * 0.4)) - 10;
@@ -228,41 +221,129 @@ function spawnMeteor() {
         colorSet: colorSet,
         state: 'igniting',
         igniteProgress: 0,
-        igniteSpeed: 0.02 + Math.random() * 0.015,
+        igniteSpeed: 0.018 + Math.random() * 0.015,
         life: 1.0,
-        decay: 0.012 + Math.random() * 0.014
+        decay: 0.01 + Math.random() * 0.012
     });
 }
 
 function triggerLaunchBurst(x, y, colorSet) {
-    const particleCount = 6 + Math.floor(Math.random() * 5);
+    const particleCount = 8 + Math.floor(Math.random() * 6);
     for (let p = 0; p < particleCount; p++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 0.5 + Math.random() * 1.2;
+        let angle = Math.random() * Math.PI * 2;
+        let speed = 0.5 + Math.random() * 1.5;
         particles.push({
             x: x,
             y: y,
             dx: Math.cos(angle) * speed,
             dy: Math.sin(angle) * speed,
             life: 1.0,
-            decay: 0.08 + Math.random() * 0.08,
-            glow: colorSet.glow,
-            color: colorSet.core
+            decay: 0.06 + Math.random() * 0.06,
+            rgb: colorSet.rgb
         });
     }
 }
 
-// --- 8. STABLE BLISTERING-FAST RENDER LOOP (NON-POLYGON SPHERE) ---
+// --- 8. 3-LINE STAFF RINGS & 4 CRISP NOTES ---
+const baseRingRadius = 36;
+const musicalNotes = [
+    { type: '♪', offsetAngle: 0.0 },
+    { type: '♫', offsetAngle: Math.PI / 2 },
+    { type: '♪', offsetAngle: Math.PI },
+    { type: '♫', offsetAngle: (Math.PI * 3) / 2 }
+];
+
+const staffRings = [
+    { radius: baseRingRadius - 3, color: 'rgba(224, 170, 255, 0.60)' },
+    { radius: baseRingRadius, color: 'rgba(224, 170, 255, 0.45)' },
+    { radius: baseRingRadius + 3, color: 'rgba(224, 170, 255, 0.20)' }
+];
+
+function drawCrispNote(ctx, x, y, type) {
+    ctx.fillStyle = '#ffffff';
+    if (type === '♪') {
+        ctx.fillRect(x - 1, y, 2, 2);
+        ctx.fillRect(x, y - 3, 1, 4);
+    } else if (type === '♫') {
+        ctx.fillRect(x - 2, y, 2, 2);
+        ctx.fillRect(x + 1, y - 1, 2, 2);
+        ctx.fillRect(x - 1, y - 4, 1, 4);
+        ctx.fillRect(x + 2, y - 5, 1, 4);
+        ctx.fillRect(x - 1, y - 4, 4, 1);
+    }
+}
+
+function drawStaffRingSegment(ctx, cx, cy, isBack, time) {
+    const spinAngle = time * 0.0008;
+
+    for (let r = 0; r < staffRings.length; r++) {
+        let track = staffRings[r];
+        ctx.fillStyle = track.color;
+
+        for (let a = 0; a < Math.PI * 2; a += 0.015) {
+            let currentAngle = a + spinAngle;
+            let rx = Math.round(Math.cos(currentAngle) * track.radius);
+            let ry = Math.round(Math.sin(currentAngle) * track.radius);
+
+            let isPointBack = ry < 0;
+            if (isPointBack !== isBack) continue;
+
+            let px = cx + rx;
+            let py = cy + ry;
+
+            if (px >= 0 && px < V_WIDTH && py >= 0 && py < V_HEIGHT) {
+                ctx.fillRect(px, py, 1, 1);
+            }
+        }
+    }
+
+    for (let i = 0; i < musicalNotes.length; i++) {
+        let note = musicalNotes[i];
+        let noteAngle = note.offsetAngle + spinAngle;
+        let nx = Math.round(Math.cos(noteAngle) * baseRingRadius);
+        let ny = Math.round(Math.sin(noteAngle) * baseRingRadius);
+
+        let isNoteBack = ny < 0;
+        if (isNoteBack !== isBack) continue;
+
+        let screenX = cx + nx;
+        let screenY = cy + ny;
+
+        if (screenX >= 0 && screenX < V_WIDTH && screenY >= 0 && screenY < V_HEIGHT) {
+            drawCrispNote(ctx, screenX, screenY, note.type);
+        }
+    }
+}
+
+// --- 9. FIXED-TIMESTEP 60 FPS RENDER LOOP ---
 let lastTime = 0;
+let accumulator = 0;
+const TIMESTEP = 1000 / 60;
+let simTime = 0;
 const sphereRadius = 24;
+
+const PLANET_PALETTE = [
+    '#ffffff', // 0: White Snowy Cap
+    '#e0aaff', // 1: Soft Pastel Lavender
+    '#c77dff', // 2: Luminous Violet
+    '#9d4edd', // 3: Rich Amethyst
+    '#5a189a', // 4: Deep Midnight Purple
+    '#240046' // 5: Deep Base Shadow
+];
 
 function renderScene(timestamp) {
     if (!lastTime) lastTime = timestamp;
-    let deltaTime = timestamp - lastTime;
-    if (deltaTime > 100) deltaTime = 100;
+    let frameDelta = timestamp - lastTime;
+    if (frameDelta > 250) frameDelta = 250;
     lastTime = timestamp;
+    accumulator += frameDelta;
 
-    const time = timestamp || 0;
+    while (accumulator >= TIMESTEP) {
+        simTime += TIMESTEP;
+        accumulator -= TIMESTEP;
+    }
+
+    const time = simTime;
 
     // A. Base Sky Render Loop (Gradient + Dithering)
     for (let y = 0; y < V_HEIGHT; y++) {
@@ -310,8 +391,6 @@ function renderScene(timestamp) {
         let alpha = star.baseAlpha + twinkle * 0.3;
         alpha = Math.min(1.0, Math.max(0.2, alpha));
 
-        ctx.shadowColor = 'rgba(180, 150, 255, 0.4)';
-        ctx.shadowBlur = 2;
         ctx.fillStyle = `rgba(240, 235, 255, ${alpha})`;
         ctx.fillRect(star.x, star.y, 1, 1);
     }
@@ -323,7 +402,7 @@ function renderScene(timestamp) {
     if (time - lastMeteorTime > nextMeteorDelay) {
         spawnMeteor();
         lastMeteorTime = time;
-        nextMeteorDelay = 200 + Math.random() * 400;
+        nextMeteorDelay = 250 + Math.random() * 350;
     }
 
     for (let i = meteors.length - 1; i >= 0; i--) {
@@ -331,24 +410,16 @@ function renderScene(timestamp) {
 
         if (m.state === 'igniting') {
             m.igniteProgress += m.igniteSpeed;
-            let twinkleFactor = 0.75 + Math.sin(m.igniteProgress * Math.PI * 12) * 0.25;
-            let intensity = Math.sin(m.igniteProgress * Math.PI) * twinkleFactor;
-
-            ctx.shadowColor = m.colorSet.harshGlow;
-            ctx.shadowBlur = 10 + intensity * 12;
-
             let cx = Math.round(m.x);
             let cy = Math.round(m.y);
 
-            ctx.fillStyle = m.colorSet.core;
-            ctx.fillRect(cx - 2, cy, 5, 1);
-            ctx.fillRect(cx, cy - 2, 1, 5);
-
-            ctx.fillStyle = m.colorSet.glow;
-            ctx.fillRect(cx - 1, cy - 1, 3, 3);
+            // Pure pixel 5x5 Plus-Cross Ignition Star (Transparent corners, zero black artifacts)
+            ctx.fillStyle = `rgba(${m.colorSet.rgb}, 0.85)`;
+            ctx.fillRect(cx, cy - 2, 1, 5); // Vertical bar
+            ctx.fillRect(cx - 2, cy, 5, 1); // Horizontal bar
 
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(cx, cy, 1, 1);
+            ctx.fillRect(cx, cy, 1, 1); // Center white core pixel
 
             if (m.igniteProgress >= 1.0) {
                 m.state = 'falling';
@@ -359,7 +430,7 @@ function renderScene(timestamp) {
             m.y += m.dy;
             m.life -= m.decay;
 
-            if (m.life <= 0 || m.x < -30 || m.y > V_HEIGHT) {
+            if (m.life <= 0 || m.x < -40 || m.y > V_HEIGHT + 10) {
                 meteors.splice(i, 1);
                 continue;
             }
@@ -367,30 +438,27 @@ function renderScene(timestamp) {
             const normDx = m.dx / Math.hypot(m.dx, m.dy);
             const normDy = m.dy / Math.hypot(m.dx, m.dy);
 
-            ctx.shadowColor = m.colorSet.glow;
-            ctx.shadowBlur = 4 + m.thickness * 3;
-
+            // Render smoothly fading pixel-art trail
             for (let j = 0; j < m.length; j++) {
                 let px = Math.round(m.x - normDx * j);
                 let py = Math.round(m.y - normDy * j);
 
                 if (px < 0 || px >= V_WIDTH || py < 0 || py >= V_HEIGHT) continue;
 
-                let segAlpha = (1 - (j / m.length)) * m.life;
+                let ratio = 1 - (j / m.length);
+                let segAlpha = ratio * m.life;
                 if (segAlpha <= 0) continue;
 
+                ctx.fillStyle = `rgba(${m.colorSet.rgb}, ${segAlpha})`;
                 let sz = m.thickness;
-                if (j > m.length * 0.4) sz = Math.max(1, sz - 1);
+                if (j > m.length * 0.7) sz = 1; // Taper tail tip
 
-                if (j === 0) {
-                    ctx.fillStyle = m.colorSet.head;
-                    ctx.fillRect(px, py, sz, sz);
-                } else {
-                    let rgb = m.colorSet.trail;
-                    ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${segAlpha})`;
-                    ctx.fillRect(px, py, sz, sz);
-                }
+                ctx.fillRect(px, py, sz, sz);
             }
+
+            // Head bright pixel
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, 1);
         }
     }
 
@@ -405,123 +473,54 @@ function renderScene(timestamp) {
             continue;
         }
 
-        ctx.shadowColor = p.glow;
-        ctx.shadowBlur = 4 * p.life;
-        ctx.fillStyle = p.color;
+        ctx.fillStyle = `rgba(${p.rgb}, ${p.life})`;
         ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
     }
 
-    ctx.shadowBlur = 0;
-
-    // C. RENDER FOREGROUND PLANET & RINGS
+    // C. PLANET & 3-LINE STAFF RINGS
     const planetX = 128;
     const planetBaseY = 56;
-    const floatY = Math.sin(time * 0.0012) * 2.5;
+    const floatY = Math.round(Math.sin(time * 0.0012) * 2.5); // Strict integer bobbing
     const currentPlanetY = planetBaseY + floatY;
 
-    const ringA = 54;
-    const ringB = 14;
-    const ringTilt = -0.42;
-    const colorSpin = time * 0.002;
+    // 1. Draw Back Staff Ring Segment & Notes
+    drawStaffRingSegment(ctx, planetX, currentPlanetY, true, time);
 
-    function drawRingSegment(isBack) {
-        ctx.shadowColor = 'rgba(210, 140, 255, 0.65)';
-        ctx.shadowBlur = 5;
+    // 2. Crisp Dark Pixel Outline (Border)
+    ctx.fillStyle = '#0a0314';
+    ctx.beginPath();
+    ctx.arc(planetX, currentPlanetY, sphereRadius + 1, 0, Math.PI * 2);
+    ctx.fill();
 
-        for (let a = 0; a < Math.PI * 2; a += 0.02) {
-            let lx = Math.cos(a) * ringA;
-            let ly = Math.sin(a) * ringB;
+    // 3. Base Planet Body Mask & Clipped 2D Wrapping Waves
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(planetX, currentPlanetY, sphereRadius, 0, Math.PI * 2);
+    ctx.clip();
 
-            let rx = lx * Math.cos(ringTilt) - ly * Math.sin(ringTilt);
-            let ry = lx * Math.sin(ringTilt) + ly * Math.cos(ringTilt);
+    const waveSpin = time * 0.0008;
 
-            let isPointBack = ry < 0;
-            if (isPointBack !== isBack) continue;
+    for (let py = -sphereRadius; py <= sphereRadius; py++) {
+        let yNorm = py / sphereRadius;
 
-            let colorWave = Math.sin(a * 2 + colorSpin);
+        for (let px = -sphereRadius; px <= sphereRadius; px++) {
+            let xNorm = px / sphereRadius;
+            let zVal = Math.sqrt(Math.max(0, 1 - xNorm * xNorm - yNorm * yNorm));
 
-            for (let w = -2; w <= 2; w++) {
-                let offsetFactor = 1.0 + (w * 0.04);
-                let rX = Math.round(planetX + (lx * offsetFactor) * Math.cos(ringTilt) - (ly * offsetFactor) * Math.sin(ringTilt));
-                let rY = Math.round(currentPlanetY + (lx * offsetFactor) * Math.sin(ringTilt) + (ly * offsetFactor) * Math.cos(ringTilt));
+            let surfaceAngle = Math.atan2(zVal, xNorm) + waveSpin;
+            let wrappingWave = yNorm + Math.sin(surfaceAngle * 3) * 0.16;
 
-                let coreFactor = 1 - Math.abs(w) * 0.28;
-                let rVal = Math.round((235 + colorWave * 20) * coreFactor);
-                let gVal = Math.round((140 + colorWave * 40) * coreFactor);
-                let bVal = Math.round((255 + colorWave * 0) * coreFactor);
+            let bandIdx = Math.floor((wrappingWave + 1.1) * 2.5);
+            bandIdx = Math.max(0, Math.min(PLANET_PALETTE.length - 1, bandIdx));
 
-                ctx.fillStyle = `rgb(${rVal}, ${gVal}, ${bVal})`;
-                ctx.fillRect(rX, rY, 1, 1);
-            }
-        }
-        ctx.shadowBlur = 0;
-    }
-
-    // 1. Draw Back Ring Segment
-    drawRingSegment(true);
-
-    // 2. Draw Non-Polygon Shaded Retro Planet Body (Blistering Fast 2D Pixel Scan)
-    const lightDir = { x: -0.58, y: -0.62, z: 0.52 };
-    const spinOffset = time * 0.0008;
-
-    for (let dy = -sphereRadius; dy <= sphereRadius; dy++) {
-        for (let dx = -sphereRadius; dx <= sphereRadius; dx++) {
-            let r2 = dx * dx + dy * dy;
-            if (r2 > sphereRadius * sphereRadius) continue;
-
-            let nx = dx / sphereRadius;
-            let ny = dy / sphereRadius;
-            let nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
-
-            let NdotL = nx * lightDir.x + ny * lightDir.y + nz * lightDir.z;
-
-            // Retro faceted / banded wave pattern
-            let bandWave = ny + Math.sin(nx * 10 + spinOffset * 3) * 0.06;
-
-            let baseR = 120,
-                baseG = 40,
-                baseB = 160;
-            if (bandWave < -0.6) {
-                baseR = 255;
-                baseG = 215;
-                baseB = 255; // Snowy top cap
-            } else if (bandWave < -0.25) {
-                baseR = 220;
-                baseG = 130;
-                baseB = 240;
-            } else if (bandWave < 0.15) {
-                baseR = 165;
-                baseG = 65;
-                baseB = 195;
-            } else if (bandWave < 0.55) {
-                baseR = 110;
-                baseG = 30;
-                baseB = 145;
-            } else {
-                baseR = 55;
-                baseG = 10;
-                baseB = 80;
-            }
-
-            let shade = Math.max(0.18, (NdotL + 1.0) / 1.5);
-            let glint = (NdotL > 0.72) ? Math.pow((NdotL - 0.72) / 0.28, 2.0) * 80 : 0;
-
-            let pixelR = Math.min(255, Math.round(baseR * shade + glint));
-            let pixelG = Math.min(255, Math.round(baseG * shade + glint));
-            let pixelB = Math.min(255, Math.round(baseB * shade + glint));
-
-            let px = Math.round(planetX + dx);
-            let py = Math.round(currentPlanetY + dy);
-
-            if (px >= 0 && px < V_WIDTH && py >= 0 && py < V_HEIGHT) {
-                ctx.fillStyle = `rgb(${pixelR}, ${pixelG}, ${pixelB})`;
-                ctx.fillRect(px, py, 1, 1);
-            }
+            ctx.fillStyle = PLANET_PALETTE[bandIdx];
+            ctx.fillRect(planetX + px, currentPlanetY + py, 1, 1);
         }
     }
+    ctx.restore();
 
-    // 3. Draw Front Ring Segment
-    drawRingSegment(false);
+    // 4. Draw Front Staff Ring Segment & Notes
+    drawStaffRingSegment(ctx, planetX, currentPlanetY, false, time);
 
     // D. Mountain Silhouette Foreground Layer
     ctx.fillStyle = '#030206';
@@ -535,7 +534,7 @@ function renderScene(timestamp) {
 
 requestAnimationFrame(renderScene);
 
-// --- 9. INTERACTIVE CLICK-TO-HIDE FOCUS CONTROLS ---
+// --- 10. INTERACTIVE CLICK-TO-HIDE FOCUS CONTROLS ---
 const overlay = document.getElementById('overlay');
 const hint = document.getElementById('hint');
 
